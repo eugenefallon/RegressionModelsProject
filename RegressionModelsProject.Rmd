@@ -18,7 +18,7 @@ The Analysis section of this document focuses on inference with a simple linear 
 
 This conclusion holds whether we consider the relationship between MPG and transmission type alone or transmission type together with another predictors: wt / weight - the weight of the vehicle.
 
-In the simple model, the mean MPG difference is 7.245 MPG; the average MPG for cars with automatic transmissions is 17.147 MPG, and the average MPG for cars with manual transmissions is 24.392 MPG. In the multiple regression model, the MPG difference is <need value> MPG at the mean weight.
+In the simple model, the mean MPG difference is 7.245 MPG; the average MPG for cars with automatic transmissions is 17.147 MPG, and the average MPG for cars with manual transmissions is 24.392 MPG. In the multiple regression model, an increase in weight resulted in a loss of .0236 MPG per unit.
 
 Exploratory analysis and visualizations are located in the Appendix to this document.
 
@@ -59,7 +59,6 @@ se <- coef(summary(bestfit))["am", "Std. Error"]
 tstat <- qt(1 - alpha/2, n - 2)  # n - 2 for model with intercept and slope
 pe + c(-1, 1) * (se * tstat)
 ```
-The p-value of <need value> for beta3 is small and the CI does not include zero, so we can reject null in favor of the alternative hypothesis that there is a significant difference in MPG between the two groups at alpha = 0.05<verify>.
 
 ## Nested Model
 ```{r}
@@ -74,7 +73,7 @@ anova(fit1, fit2)
 
 ## Correlations
 ```{r}
-mtcars_vars <- mtcars[, c(1, 6, 7, 9)]
+mtcars_vars <- mtcars[, c(1, 6, 9)]
 mar.orig <- par()$mar  # save the original values 
 par(mar = c(1, 1, 1, 1))  # set your new values 
 pairs(mtcars_vars, panel = panel.smooth, col = 9 + mtcars$wt)
