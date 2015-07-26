@@ -1,0 +1,112 @@
+---
+title: "Regression Models Course Project"
+author: "Eugene Fallon"
+date: "July 26, 2015"
+output: pdf_document
+---
+
+# Automatic or Manual Transmission: Which Has Better MPG?
+
+## Executive Summary
+### Context
+The project assignment was to assume you work for Motor Trend, a magazine about the automobile industry. Looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions:
+
+1) Is an automatic or manual transmission better for MPG?
+2) Quantify the MPG difference between automatic and manual transmissions.
+
+The Analysis section of this document focuses on inference with a simple linear regression model and a multiple regression model. Both models support the conclusion that the cars in this study with manual transmissions have on average significantly higher MPG’s than cars with automatic transmissions.
+
+This conclusion holds whether we consider the relationship between MPG and transmission type alone or transmission type together with another predictors: wt / weight - the weight of the vehicle.
+
+In the simple model, the mean MPG difference is 7.245 MPG; the average MPG for cars with automatic transmissions is 17.147 MPG, and the average MPG for cars with manual transmissions is 24.392 MPG. In the multiple regression model, the MPG difference is <need value> MPG at the mean weight.
+
+Exploratory analysis and visualizations are located in the Appendix to this document.
+
+## Analysis
+Simple Linear Regression - lm(mpg ~ am, data = mtcars)
+```{r}
+data(mtcars)
+n <- length(mtcars$mpg)
+alpha <- 0.05
+fit <- lm(mpg ~ am, data = mtcars)
+coef(summary(fit))
+```
+
+The beta0 / intercept coefficient is mean MPG for cars with automatic transmissions; the beta1 / am coefficient is the mean increase in MPG for cars with manual transmissions (am = 1). The sum beta0 + beta1 is our mean MPG for cars with manual transmissions.
+
+Using the output above, we can calculate a 95% confidence interval for beta1 (mean MPG difference) as follows:
+```{r}
+pe <- coef(summary(fit))["am", "Estimate"]
+se <- coef(summary(fit))["am", "Std. Error"]
+tstat <- qt(1 - alpha/2, n - 2)  # n - 2 for model with intercept and slope
+pe + c(-1, 1) * (se * tstat)
+```
+
+The p-value of 2.850207410^{-4} for beta1 is small and the CI does not include zero, so we can reject null in favor of the alternative hypothesis that there is a significant difference in MPG between the two groups at alpha = 0.05.
+
+## Multiple Regression - lm(mpg ~ wt + am, data=mtcars)
+The predictor wt (weight) was added to the model based on initial analyses of the data.  The predictor am (transmission type) is of course a requirement of the project. This set of predictors yields the highest adjusted R-squared. 
+```{r}
+# fit a model using the regressors suggested by bestglm residual plot is in
+# Appendix
+bestfit <- lm(mpg ~ wt + am, data = mtcars)
+coef(summary(bestfit))
+```
+Using the output above, we can calculate a 95% confidence interval for beta3 / am as follows:
+```{r}
+pe <- coef(summary(bestfit))["am", "Estimate"]
+se <- coef(summary(bestfit))["am", "Std. Error"]
+tstat <- qt(1 - alpha/2, n - 2)  # n - 2 for model with intercept and slope
+pe + c(-1, 1) * (se * tstat)
+```
+The p-value of <need value> for beta3 is small and the CI does not include zero, so we can reject null in favor of the alternative hypothesis that there is a significant difference in MPG between the two groups at alpha = 0.05<verify>.
+
+## Nested Model
+```{r}
+# nested model testing of the model selected by bestglm
+fit1 <- lm(mpg ~ wt, data = mtcars)
+fit2 <- update(fit1, mpg ~ wt + am)
+anova(fit1, fit2)
+```
+
+
+# Appendix - Exploratory Analysis and Visualizations
+
+## Correlations
+```{r}
+mtcars_vars <- mtcars[, c(1, 6, 7, 9)]
+mar.orig <- par()$mar  # save the original values 
+par(mar = c(1, 1, 1, 1))  # set your new values 
+pairs(mtcars_vars, panel = panel.smooth, col = 9 + mtcars$wt)
+```
+
+```{r}
+par(mar = mar.orig)  # put the original values back 
+cor(mtcars_vars)
+```
+
+## Histograms
+
+Nothing remarkable here except perhaps in the weight / wt histogram. The Cadillac Fleetwood, Lincoln Continental and Chrysler Imperial are quite a bit heavier than other cars in the dataset.
+```{r}
+library(ggplot2)
+library(gridExtra)
+mpg_dist <- qplot(mtcars_vars$mpg, fill = I("red"))
+wt_dist <- qplot(mtcars_vars$wt, fill = I("lightblue"))
+am_dist <- qplot(mtcars_vars$am, fill = I("green"))
+grid.arrange(mpg_dist, wt_dist, am_dist, ncol = 2)
+```
+
+## Standard Deviation of MPG by Transmission Type
+```{r}
+by(mtcars_vars$mpg, mtcars_vars$am, sd)
+```
+
+## Residual Plot
+There is a bit of a curve to the residual plot, so that it departs slightly from normality. The residuals for the Chrysler Imperial, Fiat 128, and Toyota Corolla are called out because they exert some influence on the shape of the curve.
+```{r}
+mar.orig <- par()$mar  # save the original values 
+par(mar = c(2, 2, 2, 2))  # set your new values 
+plot(bestfit, which = c(1:1))
+```
+
